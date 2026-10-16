@@ -1,12 +1,17 @@
-
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const canvasContainer = document.querySelector(".canvas-contenedor");
+const scoreElement = document.getElementById("score");
 
-const NORMAL_COLOR = "#808080";
-const COLLISION_COLOR = "#0000FF";
-const COLLISION_GLOW = "#00BFFF";
-const COLLISION_FLASH_FRAMES = 12;
+// Carga de imágenes (asegúrate de incluir 'cueva.webp' y 'diamante.webp' en la misma carpeta)
+const bgImage = new Image();
+bgImage.src = "cueva.webp";
+
+const diamondImage = new Image();
+diamondImage.src = "diamante.webp";
+
+let score = 0;
+const TOTAL_DIAMONDS = 25; // Cantidad fija de objetos requerida
 
 function setCanvasSize() {
     const rect = canvasContainer.getBoundingClientRect();
@@ -25,301 +30,151 @@ function setCanvasSize() {
 
 let dimensions = setCanvasSize();
 
-// Clase Circle basada en el código original del PDF.
-class Circle {
-    constructor(x, y, radius, color, text, speed) {
-        this.posX = x;
-        this.posY = y;
-        this.radius = radius;
-        this.color = NORMAL_COLOR;
-        this.originalColor = NORMAL_COLOR;
-        this.text = text;
-        this.speed = speed;
+// Configuración de dificultad según la puntuación
+function getSpeedMultiplier() {
+    if (score > 20) {
+        return 1.8; // Velocidad alta
+    } else if (score > 10) {
+        return 1.4; // Velocidad media
+    }
+    return 1.0; // Velocidad inicial
+}
 
-        const angle = Math.random() * Math.PI * 2;
-
-        this.dx = Math.cos(angle) * speed;
-        this.dy = Math.sin(angle) * speed;
-
-        this.colliding = false;
-        this.flashFrames = 0;
+class Diamond {
+    constructor(isInitial = false) {
+        this.size = 70; // Tamaño del sprite del diamante
+        this.reset(isInitial);
     }
 
-    draw(context) {
-        // Azul durante el contacto y brevemente después.
-        const flashing =
-            this.colliding || this.flashFrames > 0;
-
-        const currentColor = flashing
-            ? COLLISION_COLOR
-            : NORMAL_COLOR;
-
-        context.save();
-        context.beginPath();
-
-        if (flashing) {
-            context.shadowColor = COLLISION_GLOW;
-            context.shadowBlur = 30;
-            context.strokeStyle = COLLISION_COLOR;
-            context.lineWidth = 6;
+    reset(isInitial = false) {
+        const width = dimensions.width;
+        
+        // Ubicación X aleatoria en la parte superior
+        this.x = Math.random() * (width - this.size);
+        
+        // Si es el inicio, distribuir en la pantalla; si reaparece, iniciar justo arriba del canvas
+        if (isInitial) {
+            this.y = Math.random() * (dimensions.height - this.size);
         } else {
-            context.shadowBlur = 0;
-            context.strokeStyle = NORMAL_COLOR;
-            context.lineWidth = 3;
+            this.y = -this.size - Math.random() * 100;
         }
 
-        context.arc(
-            this.posX,
-            this.posY,
-            this.radius,
-            0,
-            Math.PI * 2
-        );
-
-        context.stroke();
-
-        // La etiqueta también destaca durante el choque.
-        context.shadowBlur = 0;
-        context.fillStyle = flashing
-            ? "#FFFFFF"
-            : NORMAL_COLOR;
-
-        context.textAlign = "center";
-        context.textBaseline = "middle";
-        context.font = "bold 13px Arial";
-
-        context.fillText(
-            this.text,
-            this.posX,
-            this.posY
-        );
-
-        context.closePath();
-        context.restore();
+        const multiplier = getSpeedMultiplier();
+        this.vy = (1 + Math.random() * 3) * multiplier; // Velocidad vertical inicial
+        this.vx = (Math.random() - 0.5) * 2; // Ligero desplazamiento horizontal para formar parábolas
+        this.gravity = 0.25 * multiplier; // Efecto de gravedad
+        this.bounce = 0.65; // Factor de restitución (pérdida de fuerza en cada rebote)
+        this.bouncesCount = 0;
+        this.maxBounces = 3 + Math.floor(Math.random() * 2); // Límite de rebotes
     }
 
     update() {
-        this.posX += this.dx;
-        this.posY += this.dy;
+        this.vy += this.gravity;
+        this.y += this.vy;
+        this.x += this.vx;
 
         const width = dimensions.width;
         const height = dimensions.height;
 
-        // Rebote en los bordes horizontales.
-        if (this.posX + this.radius > width) {
-            this.posX = width - this.radius;
-            this.dx = -Math.abs(this.dx);
-        } else if (this.posX - this.radius < 0) {
-            this.posX = this.radius;
-            this.dx = Math.abs(this.dx);
+        // Rebotes en las paredes laterales
+        if (this.x <= 0) {
+            this.x = 0;
+            this.vx *= -1;
+        } else if (this.x + this.size >= width) {
+            this.x = width - this.size;
+            this.vx *= -1;
         }
 
-        // Rebote en los bordes verticales.
-        if (this.posY + this.radius > height) {
-            this.posY = height - this.radius;
-            this.dy = -Math.abs(this.dy);
-        } else if (this.posY - this.radius < 0) {
-            this.posY = this.radius;
-            this.dy = Math.abs(this.dy);
-        }
+        // Rebote en el piso (borde inferior)
+        if (this.y + this.size >= height) {
+            this.y = height - this.size;
+            this.vy = -this.vy * this.bounce; // Rebote tipo pelota (parábola)
+            this.vx *= 0.8; // Fricción con el suelo
+            this.bouncesCount++;
 
-        // Reduce el tiempo restante del destello.
-        if (this.flashFrames > 0) {
-            this.flashFrames--;
-        }
-    }
-}
-
-const circles = [];
-
-function randomColor() {
-    return NORMAL_COLOR;
-}
-
-// Evita, en lo posible, que nazcan superpuestos.
-function positionIsFree(x, y, radius) {
-    return circles.every(circle => {
-        const dx = circle.posX - x;
-        const dy = circle.posY - y;
-
-        const distance = Math.sqrt(
-            dx * dx + dy * dy
-        );
-
-        return distance >= circle.radius + radius + 3;
-    });
-}
-
-// Genera 20 círculos con velocidades entre 1 y 5.
-function generateCircles(n) {
-    const width = dimensions.width;
-    const height = dimensions.height;
-
-    const maxRadius = Math.max(
-        8,
-        Math.min(22, width / 25, height / 20)
-    );
-
-    const minRadius = Math.min(13, maxRadius);
-
-    for (let i = 0; i < n; i++) {
-        const radius = minRadius +
-            Math.random() * (maxRadius - minRadius);
-
-        let x = radius + Math.random() *
-            Math.max(1, width - radius * 2);
-
-        let y = radius + Math.random() *
-            Math.max(1, height - radius * 2);
-
-        let attempts = 0;
-
-        while (
-            !positionIsFree(x, y, radius) &&
-            attempts < 250
-        ) {
-            x = radius + Math.random() *
-                Math.max(1, width - radius * 2);
-
-            y = radius + Math.random() *
-                Math.max(1, height - radius * 2);
-
-            attempts++;
-        }
-
-        const speed = 1 + Math.random() * 4;
-        const text = `C${i + 1}`;
-
-        circles.push(
-            new Circle(
-                x,
-                y,
-                radius,
-                randomColor(),
-                text,
-                speed
-            )
-        );
-    }
-}
-
-// Detecta colisiones entre todos los pares de círculos.
-function detectCollisions() {
-    circles.forEach(circle => {
-        circle.colliding = false;
-    });
-
-    for (let i = 0; i < circles.length; i++) {
-        for (let j = i + 1; j < circles.length; j++) {
-            const c1 = circles[i];
-            const c2 = circles[j];
-
-            const dx = c2.posX - c1.posX;
-            const dy = c2.posY - c1.posY;
-
-            const distance = Math.sqrt(
-                dx * dx + dy * dy
-            );
-
-            const minDistance =
-                c1.radius + c2.radius;
-
-            if (distance <= minDistance) {
-                // Ambos círculos se ponen azules.
-                c1.colliding = true;
-                c2.colliding = true;
-
-                // Reinicia el destello para que sea visible.
-                c1.flashFrames = COLLISION_FLASH_FRAMES;
-                c2.flashFrames = COLLISION_FLASH_FRAMES;
-
-                const safeDistance =
-                    Math.max(distance, 0.0001);
-
-                const nx = dx / safeDistance;
-                const ny = dy / safeDistance;
-
-                // Velocidad relativa sobre la normal.
-                const relativeVelocity =
-                    (c2.dx - c1.dx) * nx +
-                    (c2.dy - c1.dy) * ny;
-
-                // Rebote cuando los círculos se aproximan.
-                if (relativeVelocity < 0) {
-                    const impulse = relativeVelocity;
-
-                    c1.dx += impulse * nx;
-                    c1.dy += impulse * ny;
-
-                    c2.dx -= impulse * nx;
-                    c2.dy -= impulse * ny;
-                }
-
-                // Separa los círculos para evitar que se atasquen.
-                const overlap = minDistance - distance;
-                const correction = overlap / 2 + 0.1;
-
-                c1.posX -= nx * correction;
-                c1.posY -= ny * correction;
-
-                c2.posX += nx * correction;
-                c2.posY += ny * correction;
+            // Cuando pierde suficiente fuerza o supera el límite de rebotes, reaparece arriba
+            if (Math.abs(this.vy) < 1.5 || this.bouncesCount >= this.maxBounces) {
+                this.reset(false);
             }
         }
     }
+
+    draw(context) {
+        if (diamondImage.complete && diamondImage.naturalWidth !== 0) {
+            context.drawImage(diamondImage, this.x, this.y, this.size, this.size);
+        } else {
+            // Dibujo alternativo si la imagen aún no ha cargado
+            context.fillStyle = "#00ffff";
+            context.fillRect(this.x, this.y, this.size, this.size);
+        }
+    }
+
+    // Comprobación para detectar si el clic del ratón ocurrió dentro del diamante
+    isClicked(mouseX, mouseY) {
+        return (
+            mouseX >= this.x &&
+            mouseX <= this.x + this.size &&
+            mouseY >= this.y &&
+            mouseY <= this.y + this.size
+        );
+    }
 }
 
-// Adapta el canvas al tamaño de la ventana.
-let resizeTimer;
+const diamonds = [];
 
+function initDiamonds() {
+    diamonds.length = 0;
+    for (let i = 0; i < TOTAL_DIAMONDS; i++) {
+        diamonds.push(new Diamond(true));
+    }
+}
+
+// Detección de clics para eliminar objetos e incrementar el contador
+canvas.addEventListener("click", (event) => {
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+
+    for (let i = diamonds.length - 1; i >= 0; i--) {
+        if (diamonds[i].isClicked(mouseX, mouseY)) {
+            score++;
+            scoreElement.textContent = score;
+            diamonds[i].reset(false); // Reaparece arriba para mantener siempre 25 objetos
+            break; // Elimina solo un diamante por clic
+        }
+    }
+});
+
+// Ajuste dinámico de ventana
+let resizeTimer;
 window.addEventListener("resize", () => {
     clearTimeout(resizeTimer);
-
     resizeTimer = setTimeout(() => {
-        const oldWidth = dimensions.width;
-        const oldHeight = dimensions.height;
-
         dimensions = setCanvasSize();
-
-        circles.forEach(circle => {
-            circle.posX = Math.max(
-                circle.radius,
-                Math.min(
-                    dimensions.width - circle.radius,
-                    circle.posX * dimensions.width /
-                        Math.max(oldWidth, 1)
-                )
-            );
-
-            circle.posY = Math.max(
-                circle.radius,
-                Math.min(
-                    dimensions.height - circle.radius,
-                    circle.posY * dimensions.height /
-                        Math.max(oldHeight, 1)
-                )
-            );
-        });
     }, 100);
 });
 
-// Animación principal.
+// Bucle principal de animación
 function animate() {
-    ctx.clearRect(
-        0,
-        0,
-        dimensions.width,
-        dimensions.height
-    );
+    ctx.clearRect(0, 0, dimensions.width, dimensions.height);
 
-    circles.forEach(circle => circle.update());
+    // Dibujar fondo wallpaper de la cueva
+    if (bgImage.complete && bgImage.naturalWidth !== 0) {
+        ctx.drawImage(bgImage, 0, 0, dimensions.width, dimensions.height);
+    } else {
+        ctx.fillStyle = "#172033";
+        ctx.fillRect(0, 0, dimensions.width, dimensions.height);
+    }
 
-    detectCollisions();
-
-    circles.forEach(circle => circle.draw(ctx));
+    // Actualizar y renderizar diamantes
+    diamonds.forEach(diamond => {
+        diamond.update();
+        diamond.draw(ctx);
+    });
 
     requestAnimationFrame(animate);
 }
 
-generateCircles(20);
+// Inicializar y ejecutar
+initDiamonds();
 animate();

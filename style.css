@@ -1,4 +1,3 @@
-
 * {
     box-sizing: border-box;
     margin: 0;
@@ -8,8 +7,8 @@
 body {
     min-height: 100vh;
     font-family: Arial, Helvetica, sans-serif;
-    background: #eef2f7;
-    color: #1e293b;
+    background: #0f172a;
+    color: #f8fafc;
 }
 
 .encabezado {
@@ -17,82 +16,73 @@ body {
     justify-content: space-between;
     align-items: center;
     gap: 24px;
-    padding: 28px 5%;
+    padding: 24px 5%;
     color: white;
-    background: linear-gradient(120deg, #102a43, #176b87);
+    background: linear-gradient(120deg, #09131d, #1e293b);
+    border-bottom: 2px solid #38bdf8;
 }
 
 .etiqueta {
     display: inline-block;
-    margin-bottom: 10px;
-    color: #a5e8f5;
+    margin-bottom: 8px;
+    color: #38bdf8;
     font-size: 12px;
     font-weight: bold;
     letter-spacing: 2px;
 }
 
 .encabezado h1 {
-    margin-bottom: 10px;
-    font-size: clamp(25px, 4vw, 38px);
+    margin-bottom: 8px;
+    font-size: clamp(24px, 4vw, 36px);
 }
 
 .encabezado p {
     max-width: 650px;
-    line-height: 1.6;
-    color: #e1edf5;
+    line-height: 1.5;
+    color: #94a3b8;
 }
 
+/* Estilo para el contador superior derecho */
 .indicadores {
     display: flex;
     align-items: center;
-    gap: 18px;
 }
 
-.indicador {
+.indicador-contador {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 7px;
-    min-width: 75px;
+    gap: 10px;
+    padding: 12px 20px;
+    background: rgba(15, 23, 42, 0.8);
+    border: 2px solid #38bdf8;
+    border-radius: 12px;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
 }
 
-.numero {
-    font-size: 30px;
+.descripcion-contador {
+    font-size: 16px;
     font-weight: bold;
+    color: #e2e8f0;
 }
 
-.descripcion {
-    font-size: 12px;
-    color: #e1edf5;
-}
-
-.muestra {
-    display: inline-block;
-    width: 15px;
-    height: 15px;
-    border-radius: 50%;
-}
-
-.azul {
-    background: #0000FF;
-}
-
-.normal {
-    background: #808080;
+.numero-contador {
+    font-size: 28px;
+    font-weight: bold;
+    color: #38bdf8;
 }
 
 main {
     width: 90%;
     max-width: 1450px;
-    margin: 28px auto;
+    margin: 24px auto;
 }
 
 .panel {
     overflow: hidden;
-    border: 1px solid #d9e2ec;
+    border: 1px solid #334155;
     border-radius: 14px;
-    background: white;
-    box-shadow: 0 5px 20px rgba(15, 23, 42, 0.07);
+    background: #1e293b;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
 }
 
 .panel-superior {
@@ -101,88 +91,72 @@ main {
     align-items: center;
     flex-wrap: wrap;
     gap: 15px;
-    padding: 20px 24px;
+    padding: 18px 24px;
+    background: #0f172a;
 }
 
 .panel-superior h2 {
-    margin-bottom: 7px;
+    margin-bottom: 4px;
     font-size: 20px;
+    color: #f1f5f9;
 }
 
 .panel-superior p {
-    color: #64748b;
+    color: #94a3b8;
     font-size: 14px;
-    line-height: 1.5;
 }
 
 .estado {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 9px 13px;
+    padding: 8px 14px;
     border-radius: 20px;
-    background: #dcfce7;
-    color: #166534;
+    background: #064e3b;
+    color: #34d399;
     font-size: 13px;
     font-weight: bold;
 }
 
 .punto {
-    width: 9px;
-    height: 9px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
-    background: #16a34a;
+    background: #10b981;
 }
 
 .canvas-contenedor {
     width: 100%;
     height: min(68vh, 650px);
-    min-height: 380px;
+    min-height: 400px;
     overflow: hidden;
-    background: #172033;
-    border-top: 1px solid #334155;
-    border-bottom: 1px solid #334155;
+    position: relative;
 }
 
 #canvas {
     display: block;
     width: 100%;
     height: 100%;
-    background: #172033;
-}
-
-.leyenda {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 25px;
-    padding: 16px;
-    color: #475569;
-    font-size: 13px;
-}
-
-.leyenda span {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    cursor: crosshair; /* Cambia el cursor a una retícula para facilitar el clic */
 }
 
 .nota {
-    margin-top: 22px;
-    padding: 20px 22px;
-    border-left: 4px solid #176b87;
+    margin-top: 20px;
+    padding: 18px 22px;
+    border-left: 4px solid #38bdf8;
     border-radius: 8px;
-    background: white;
-    line-height: 1.7;
+    background: #1e293b;
+    line-height: 1.6;
 }
 
 .nota strong {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
+    color: #f8fafc;
 }
 
 .nota p {
-    color: #475569;
+    color: #94a3b8;
     font-size: 14px;
 }
 
@@ -198,24 +172,9 @@ footer {
     .encabezado {
         align-items: flex-start;
         flex-direction: column;
-        padding: 24px 6%;
-    }
-
-    .indicadores {
-        margin-top: 5px;
     }
 
     main {
-        width: 94%;
-        margin: 18px auto;
-    }
-
-    .panel-superior {
-        padding: 18px;
-    }
-
-    .canvas-contenedor {
-        height: 60vh;
-        min-height: 350px;
+        width: 95%;
     }
 }

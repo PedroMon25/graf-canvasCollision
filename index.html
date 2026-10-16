@@ -1,27 +1,22 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2.4 Detección de colisiones</title>
+    <title>2.5 Interactividad con gráficos 2D</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header class="encabezado">
         <div class="informacion">
-            <span class="etiqueta">GRAFICACIÓN · PRÁCTICA 2.4</span>
-            <h1>Rebote de figuras</h1>
-            <p>Simulación de 20 círculos con movimiento, detección de colisiones y rebote entre objetos.</p>
+            <span class="etiqueta">GRAFICACIÓN · PRÁCTICA 2.5</span>
+            <h1>Interactividad con gráficos 2D</h1>
+            <p>Atrapa los diamantes que caen en la cueva haciendo clic sobre ellos.</p>
         </div>
         <div class="indicadores">
-            <div class="indicador">
-                <span class="numero">20</span>
-                <span class="descripcion">Círculos</span>
-            </div>
-            <div class="indicador">
-                <span class="muestra azul"></span>
-                <span class="descripcion">Colisión azul</span>
+            <div class="indicador-contador">
+                <span class="descripcion-contador">Eliminadas:</span>
+                <span id="score" class="numero-contador">0</span>
             </div>
         </div>
     </header>
@@ -30,12 +25,12 @@
         <section class="panel">
             <div class="panel-superior">
                 <div>
-                    <h2>Escenario de animación</h2>
-                    <p>Al colisionar, los círculos destellan en azul y rebotan.</p>
+                    <h2>Cueva de Diamantes</h2>
+                    <p>Haz clic en los diamantes para recolectarlos antes de que sigan rebotando.</p>
                 </div>
                 <div class="estado">
                     <span class="punto"></span>
-                    Animación activa
+                    Juego en curso
                 </div>
             </div>
 
@@ -44,27 +39,19 @@
                     Tu navegador no admite canvas.
                 </canvas>
             </div>
-
-            <div class="leyenda">
-                <span><i class="muestra normal"></i> Movimiento normal</span>
-                <span><i class="muestra azul"></i> Colisión detectada</span>
-            </div>
         </section>
 
         <section class="nota">
-            <strong>¿Cómo funciona?</strong>
+            <strong>Instrucciones y Reglas:</strong>
             <p>
-                Se calcula la distancia entre los centros de cada par de
-                círculos. Cuando la distancia es menor o igual que la suma
-                de sus radios, se detecta la colisión. Los círculos destellan
-                en azul y cambian su dirección.
+                Los diamantes caen con efecto de gravedad y rebotan perdiendo energía. Al alcanzar más de 10 y 20 diamantes recolectados, la velocidad de caída aumentará.
             </p>
         </section>
     </main>
 
     <footer>
         <p>Ingeniería en Sistemas Computacionales · Graficación</p>
-        <p>Actividad 2.4 — Detección de colisiones</p>
+        <p>Actividad 2.5 — Interactividad con gráficos 2D</p>
     </footer>
 
     <script src="colision.js"></script>
