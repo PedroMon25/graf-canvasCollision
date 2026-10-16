@@ -321,5 +321,5 @@ function animate() {
     requestAnimationFrame(animate);
 }
 
-generateCircles(5);
+generateCircles(20);
 animate();
